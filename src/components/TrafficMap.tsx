@@ -8,23 +8,8 @@ const TrafficMap = () => {
   const [zoom, setZoom] = useState(12);
   const mapRef = useRef<HTMLDivElement>(null);
 
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
-
-useEffect(() => {
-  if (mapRef.current) {
-    mapboxgl.accessToken = pk.eyJ1Ijoic2hpdmFtMjcxNyIsImEiOiJjbWczYmw5dmcwZHd4MmtzOXVwdWNmNmdtIn0.QO7tYVbk7PwFEVA0yy_iNg;
-
-    const map = new mapboxgl.Map({
-      container: mapRef.current,
-      style: "mapbox://styles/mapbox/streets-v11",
-      center: [88.3639, 22.5726], // Kolkata as example
-      zoom: zoom,
-    });
-
-    return () => map.remove();
-  }
-}, [zoom]);
+  // Note: In a real implementation, you would need to add your Mapbox access token
+  const [showMapboxNote, setShowMapboxNote] = useState(true);
 
   
   // Mock traffic zones data
@@ -62,6 +47,24 @@ useEffect(() => {
     }
   };
 
+  return (
+    <div className="relative w-full h-96 bg-muted/10 rounded-lg border overflow-hidden">
+      {/* Mapbox Token Notice */}
+      {showMapboxNote && (
+        <div className="absolute top-4 left-4 right-4 z-10 bg-info/10 border border-info/30 rounded-lg p-3">
+          <p className="text-sm text-info">
+            <strong>Map Integration:</strong> Add your Mapbox access token to enable interactive maps.
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setShowMapboxNote(false)}
+              className="ml-2 h-6 px-2 text-xs"
+            >
+              ×
+            </Button>
+          </p>
+        </div>
+      )}
 
       {/* Map Controls */}
       <div className="absolute top-4 right-4 z-10 space-y-2">
