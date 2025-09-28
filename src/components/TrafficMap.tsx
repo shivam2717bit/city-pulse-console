@@ -3,13 +3,42 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { MapPin, Navigation, Plus, Minus } from "lucide-react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 const TrafficMap = () => {
   const [zoom, setZoom] = useState(12);
   const mapRef = useRef<HTMLDivElement>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
 
-  // Note: In a real implementation, you would need to add your Mapbox access token
-  const [showMapboxNote, setShowMapboxNote] = useState(true);
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Initialize Mapbox
+    mapboxgl.accessToken = "pk.eyJ1Ijoic2hpdmFtMjcxNyIsImEiOiJjbWczYmw5dmcwZHd4MmtzOXVwdWNmNmdtIn0.QO7tYVbk7PwFEVA0yy_iNg";
+    
+    map.current = new mapboxgl.Map({
+      container: mapRef.current,
+      style: "mapbox://styles/mapbox/streets-v11",
+      center: [88.3639, 22.5726], // Kolkata coordinates
+      zoom: zoom,
+    });
+
+    // Add navigation controls
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+    // Cleanup
+    return () => {
+      map.current?.remove();
+    };
+  }, []);
+
+  // Update zoom when state changes
+  useEffect(() => {
+    if (map.current) {
+      map.current.setZoom(zoom);
+    }
+  }, [zoom]);
 
   
   // Mock traffic zones data
@@ -49,23 +78,6 @@ const TrafficMap = () => {
 
   return (
     <div className="relative w-full h-96 bg-muted/10 rounded-lg border overflow-hidden">
-      {/* Mapbox Token Notice */}
-      {showMapboxNote && (
-        <div className="absolute top-4 left-4 right-4 z-10 bg-info/10 border border-info/30 rounded-lg p-3">
-          <p className="text-sm text-info">
-            <strong>Map Integration:</strong> Add your Mapbox access token to enable interactive maps.
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setShowMapboxNote(false)}
-              className="ml-2 h-6 px-2 text-xs"
-            >
-              ×
-            </Button>
-          </p>
-        </div>
-      )}
-
       {/* Map Controls */}
       <div className="absolute top-4 right-4 z-10 space-y-2">
         <Button
@@ -86,23 +98,15 @@ const TrafficMap = () => {
         </Button>
       </div>
 
-      {/* Mock Map Background */}
-      <div 
-        ref={mapRef}
-        className="w-full h-full relative bg-gradient-to-br from-muted/30 to-muted/10"
-        style={{
-          backgroundImage: `
-            linear-gradient(0deg, rgba(0,0,0,0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
-          `,
-          backgroundSize: '20px 20px'
-        }}
-      >
+      {/* Mapbox Container */}
+      <div ref={mapRef} className="w-full h-full relative">
+        {/* Overlay for traffic zones and signals */}
+        <div className="absolute inset-0 z-10">
         {/* Traffic Zones */}
         {trafficZones.map((zone) => (
           <div
             key={zone.id}
-            className={`absolute rounded-full border-2 ${getZoneColor(zone.status)} transition-all duration-300 hover:scale-110`}
+            className={`absolute rounded-full border-2 ${getZoneColor(zone.status)} transition-all duration-300 hover:scale-110 pointer-events-auto`}
             style={{
               left: `${zone.x}%`,
               top: `${zone.y}%`,
@@ -122,7 +126,7 @@ const TrafficMap = () => {
         {trafficSignals.map((signal) => (
           <div
             key={signal.id}
-            className="absolute group"
+            className="absolute group pointer-events-auto"
             style={{
               left: `${signal.x}%`,
               top: `${signal.y}%`,
@@ -140,7 +144,7 @@ const TrafficMap = () => {
         ))}
 
         {/* Legend */}
-        <div className="absolute bottom-4 left-4 bg-background/95 border rounded-lg p-3 space-y-2">
+        <div className="absolute bottom-4 left-4 bg-background/95 border rounded-lg p-3 space-y-2 pointer-events-auto">
           <div className="text-xs font-medium">Traffic Status</div>
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
@@ -173,6 +177,7 @@ const TrafficMap = () => {
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
